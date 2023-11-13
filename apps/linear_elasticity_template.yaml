@@ -1,9 +1,9 @@
 # template for Linear Elasticity parameters file
 gp:
-  NINDIVIDUALS: 1000
-  NGEN: 100
-  CXPB: 0.2
-  MUTPB: 0.8
+  NINDIVIDUALS: 1
+  NGEN: 1
+  CXPB: 0.
+  MUTPB: 0.
   frac_elitist: 0
   min_: 2
   max_: 5
@@ -49,7 +49,8 @@ gp:
     {"name": "tran", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "sym", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "St", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["T"]}
+    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["V","T"]},
+    {"name": "def_grad", "dimension": ["0"], "rank": ["V"]}
   ]
   residual_formulation: False
 

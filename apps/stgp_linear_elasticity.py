@@ -9,7 +9,7 @@ from dctkit.mesh import util
 from alpine.gp import gpsymbreg as gps
 from alpine.util import get_LE_boundary_values
 from dctkit import config
-import dctkit
+import dctkit as dt
 
 import ray
 
@@ -30,7 +30,7 @@ residual_formulation = False
 config()
 
 
-def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray,
+def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
                  bvalues: dict, S: SimplicialComplex, gamma: float,
                  u_0: C.CochainP0) -> Tuple[float, npt.NDArray]:
 
@@ -43,7 +43,7 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray,
     config()
 
     # create objective function and set its energy function
-    def total_energy(x, curr_bvalues):
+    def total_energy(x, f, curr_bvalues):
         x_reshaped = x.reshape(S.node_coords.shape)
         penalty = 0.
         for key in curr_bvalues:
@@ -53,15 +53,16 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray,
             else:
                 penalty += jnp.sum((x_reshaped[idx, int(key)] - values)**2)
         penalty *= gamma
-        nodes = C.CochainP0(S, x_reshaped)
-        F = C.deformation_gradient(nodes)
+        nodes = C.CochainP0V(S, x_reshaped)
+        f_coch = C.CochainP0V(S, f)
+        # F = C.deformation_gradient(nodes)
         # identity = jnp.stack([jnp.identity(2)]*num_faces)
         # I = C.CochainD0T(S, identity)
         # epsilon = C.sub(C.scalar_mul(C.add(F, C.transpose(F)), 0.5), I)
         # if residual_formulation:
         #    total_energy = C.inner_product(func(c, fk), func(c, fk)) + penalty
         # else:
-        total_energy = func(F) + penalty
+        total_energy = func(nodes, f_coch) + penalty
         return total_energy
 
     prb = oc.OptimizationProblem(dim=num_nodes*dim_embedded_space,
@@ -72,14 +73,14 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray,
 
     best_sols = []
 
-    # for i, x in enumerate(X):
     for i in range(num_data):
         # extract current bvalues
         curr_bvalues = bvalues[i]
+        curr_f = jnp.array(y[i, 1:, :], dtype=dt.float_dtype)
 
         # set current bvalues and vec_y for the Poisson problem
         # args = {'vec_y': vec_y, 'vec_bvalues': vec_bvalues}
-        args = {'curr_bvalues': curr_bvalues}
+        args = {'f': curr_f, 'curr_bvalues': curr_bvalues}
         prb.set_obj_args(args)
 
         # minimize the objective
@@ -92,13 +93,15 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray,
                 or prb.last_opt_result == 4):
 
             current_err = np.linalg.norm(x_flatten-X[i, :].flatten())**2
-            x_reshaped = x_flatten.reshape(S.node_coords.shape)
-            curr_nodes = C.CochainP0(S, x_reshaped)
-            F = C.deformation_gradient(curr_nodes)
-            W = jnp.stack(
-                [jnp.array([[0, jnp.e], [-jnp.e, 0]])]*num_faces)
-            F_plus_W = C.CochainD0(S, F.coeffs + W)
-            current_err += (func(F) - func(F_plus_W))**2
+            # print(y[i, 0, 0])
+            # print(current_err)
+            # x_reshaped = x_flatten.reshape(S.node_coords.shape)
+            # curr_nodes = C.CochainP0(S, x_reshaped)
+            # F = C.deformation_gradient(curr_nodes)
+            # W = jnp.stack(
+            #    [jnp.array([[0, jnp.e], [-jnp.e, 0]])]*num_faces)
+            # F_plus_W = C.CochainD0(S, F.coeffs + W)
+            # current_err += (func(F) - func(F_plus_W))**2
         else:
             current_err = math.nan
 
@@ -116,32 +119,32 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray,
 
 
 @ray.remote(num_cpus=2)
-def eval_best_sols(individual: Callable, indlen: int, X: npt.NDArray,
+def eval_best_sols(individual: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
                    bvalues: dict, S: SimplicialComplex,
                    gamma: float, u_0: npt.NDArray, penalty: dict) -> npt.NDArray:
 
-    _, best_sols = eval_MSE_sol(individual, indlen, X, bvalues, S,
+    _, best_sols = eval_MSE_sol(individual, indlen, X, y, bvalues, S,
                                 gamma, u_0)
 
     return best_sols
 
 
 @ray.remote(num_cpus=2)
-def eval_MSE(individual: Callable, indlen: int, X: npt.NDArray,
+def eval_MSE(individual: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
              bvalues: dict, S: SimplicialComplex,
              gamma: float, u_0: npt.NDArray, penalty: dict) -> float:
 
-    MSE, _ = eval_MSE_sol(individual, indlen, X, bvalues, S, gamma, u_0)
+    MSE, _ = eval_MSE_sol(individual, indlen, X, y, bvalues, S, gamma, u_0)
 
     return MSE
 
 
 @ray.remote(num_cpus=2)
-def eval_fitness(individual: Callable, indlen: int, X: npt.NDArray,
+def eval_fitness(individual: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
                  bvalues: dict, S: SimplicialComplex, gamma: float,
                  u_0: npt.NDArray, penalty: dict) -> Tuple[float, ]:
 
-    total_err, _ = eval_MSE_sol(individual, indlen, X, bvalues, S, gamma, u_0)
+    total_err, _ = eval_MSE_sol(individual, indlen, X, y, bvalues, S, gamma, u_0)
 
     # penalty terms on length
     objval = total_err + penalty["reg_param"]*indlen
@@ -244,12 +247,9 @@ def stgp_linear_elasticity(config_file, output_path=None):
     # define primitive set and add primitives and terminals
     if residual_formulation:
         print("Using residual formulation.")
-        pset = gp.PrimitiveSetTyped("MAIN", [C.CochainP0, C.CochainP0], C.Cochain)
-        # ones cochain
-        pset.addTerminal(C.Cochain(S.num_nodes, True, S, np.ones(
-            S.num_nodes, dtype=dctkit.float_dtype)), C.Cochain, name="F")
+        raise Exception("Only non-residual formulation available for this problem.")
     else:
-        pset = gp.PrimitiveSetTyped("F", [C.CochainD0T], float)
+        pset = gp.PrimitiveSetTyped("MAIN", [C.CochainP0V, C.CochainP0V], float)
 
     # add constants
     pset.addTerminal(0.5, float, name="1/2")
@@ -261,9 +261,11 @@ def stgp_linear_elasticity(config_file, output_path=None):
     identity = jnp.stack([jnp.identity(2)]*num_faces)
     identity_coch = C.CochainD0T(S, identity)
     pset.addTerminal(identity_coch, C.CochainD0T, name="I")
+    pset.addTerminal(u_0, C.CochainP0V, name="x_ref")
 
     # rename arguments
-    pset.renameArguments(ARG0="F")
+    pset.renameArguments(ARG0="x")
+    pset.renameArguments(ARG1="f")
 
     # create symbolic regression problem instance
     GPprb = gps.GPSymbRegProblem(pset=pset, config_file_data=config_file)
@@ -273,10 +275,10 @@ def stgp_linear_elasticity(config_file, output_path=None):
     GPprb.store_eval_common_params({'S': S, 'penalty': penalty,
                                     'gamma': gamma, 'u_0': u_0})
 
-    params_names = ('X', 'bvalues')
-    datasets = {'train': [X_train, bvalues_train],
-                'val': [X_val, bvalues_val],
-                'test': [X_test, bvalues_test]}
+    params_names = ('X', 'y', 'bvalues')
+    datasets = {'train': [X_train, y_train, bvalues_train],
+                'val': [X_val, y_val, bvalues_val],
+                'test': [X_test, y_test, bvalues_test]}
     GPprb.store_eval_dataset_params(params_names, datasets)
 
     GPprb.register_eval_funcs(fitness=eval_fitness.remote, error_metric=eval_MSE.remote,
@@ -289,16 +291,17 @@ def stgp_linear_elasticity(config_file, output_path=None):
 
     GPprb.register_map([len])
 
+    from deap import creator
     start = time.perf_counter()
-    # epsilon = "SubCD0T(symD0T(F), I)"
-    # opt_string_eps = "AddF(MulF(2., InnD0T(epsilon, epsilon)),
-    # MulF(10., InnD0T(MvD0VT(trD0T(epsilon), I), epsilon)))"
-    # opt_string = opt_string_eps.replace("epsilon", epsilon)
+    epsilon = "SubCD0T(symD0T(gradF), I)"
+    opt_string_eps = "SubF(MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), MulF(10., InnD0T(MvD0VT(trD0T(epsilon), I), epsilon))), 0.5), InnP0V(SubCP0V(x,x_ref),f)"
+    opt_string = opt_string_eps.replace("epsilon", epsilon)
+    opt_string = opt_string.replace("gradF", "def_gradP0V(x)")
     # opt_string = ""
-    # opt_individ = creator.Individual.from_string(opt_string, pset)
-    # seed = [opt_individ]
+    opt_individ = creator.Individual.from_string(opt_string, pset)
+    seed = [opt_individ]
 
-    GPprb.run(print_log=True, seed=None,
+    GPprb.run(print_log=True, seed=seed,
               save_best_individual=True, save_train_fit_history=True,
               save_best_test_sols=True, X_test_param_name="X",
               output_path=output_path)

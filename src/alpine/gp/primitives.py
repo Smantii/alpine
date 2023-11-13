@@ -322,6 +322,14 @@ square_coch = {'fun_info': {'name': 'Square', 'fun': C.square},
                'map_rule': {'category': identity, 'dimension': identity,
                             "rank": identity}}
 coch_primitives.append(generate_primitive(square_coch))
+def_gradient = {'fun_info': {'name': 'def_grad', 'fun': C.deformation_gradient},
+                'input': ["C.Cochain"],
+                'output': "C.Cochain",
+                'att_input': {'category': ('P'), 'dimension': ('0'),
+                              "rank": ("V",)},
+                'map_rule': {'category': partial(switch_category, ('P', 'D')), 'dimension': identity,
+                             "rank": vec_tensor_mul_rank}}
+coch_primitives.append(generate_primitive(def_gradient))
 
 
 for primitive in coch_primitives:

@@ -67,8 +67,10 @@ def get_LE_boundary_values(X, y, ref_node_coords, boundary_nodes_info):
     left_bnd_nodes_idx = boundary_nodes_info['left_bnd_nodes_idx']
     up_bnd_nodes_idx = boundary_nodes_info['up_bnd_nodes_idx']
     down_bnd_nodes_idx = boundary_nodes_info['down_bnd_nodes_idx']
-    for i, data_label in enumerate(y):
+    for i, label_body_force in enumerate(y):
         true_curr_node_coords = X[i, :, :]
+        # NOTE: first row of y is a vector equal to the name of the benchmark
+        data_label = label_body_force[0, 0]
         if data_label == "pure_tension":
             bot_left_corn_idx = left_bnd_nodes_idx.index(0)
             bottom_left_corner = left_bnd_nodes_idx[bot_left_corn_idx]
@@ -103,6 +105,12 @@ def get_LE_boundary_values(X, y, ref_node_coords, boundary_nodes_info):
                 up_bnd_nodes_idx + down_bnd_nodes_idx
             bvalues = np.vstack((left_bnd_pos, right_bnd_pos,
                                  up_bnd_pos, down_bnd_pos))
+            boundary_values = {":": (bnodes, bvalues)}
+
+        elif data_label == "non_homogeneous_example":
+            bnodes = left_bnd_nodes_idx + right_bnd_nodes_idx + \
+                up_bnd_nodes_idx + down_bnd_nodes_idx
+            bvalues = true_curr_node_coords[bnodes, :]
             boundary_values = {":": (bnodes, bvalues)}
 
         bvalues_X.append(boundary_values)
