@@ -12,6 +12,8 @@ from dctkit.math.opt import optctrl
 
 data_path = os.path.dirname(os.path.realpath(__file__))
 
+dt.config()
+
 
 def get_data(S: simplex.SimplicialComplex, lame_moduli: List[List],
              num_data_per_each_mod_couple: List[List],
@@ -38,15 +40,14 @@ def get_data(S: simplex.SimplicialComplex, lame_moduli: List[List],
     X = np.zeros((tot_num_data,
                  S.num_nodes, 3), dtype=dt.float_dtype)
 
-    # y = []
     # NOTE: setting dtype = str truncates the string
-    # y.append(np.empty(tot_num_data, dtype=object))
     y = np.zeros((tot_num_data, S.num_nodes+1, 3), dtype=object)
 
     # number of data points for the previous couple of lame moduli, initialized to 0
     prec_num_data = 0
     # NOTE: only needed for non homogeneous example
     gamma = 1000000.
+    x0 = S.node_coords.flatten()
 
     for k, benchmark in enumerate(bench_names):
         for i, moduli in enumerate(lame_moduli[k]):
@@ -80,13 +81,12 @@ def get_data(S: simplex.SimplicialComplex, lame_moduli: List[List],
                     bvalues = anal_node_coords[bnodes, :]
                     boundary_values = {":": (bnodes, bvalues)}
 
-                    f = np.zeros((S.num_nodes, 3))
+                    f = np.zeros(S.node_coords.shape, dtype=dt.float_dtype)
                     f[:, 0] = 4*mu_*b - 2*lambda_*a + 2*lambda_*b
                     f[:, 1] = -4*mu_*a - 2*lambda_*a + 2*lambda_*b
 
                     ela = LinearElasticity(S=S, mu_=mu_, lambda_=lambda_)
                     obj = ela.obj_linear_elasticity_energy
-                    x0 = S.node_coords.flatten()
                     obj_args = {'f': f, 'gamma': gamma,
                                 'boundary_values': boundary_values}
 
@@ -126,6 +126,7 @@ if __name__ == '__main__':
     S.get_hodge_star()
     S.get_flat_DPD_weights()
     S.get_flat_DPP_weights()
+    _ = S.get_deformation_gradient(S.node_coords)
 
     down_bnd_nodes_idx = util.get_nodes_for_physical_group(mesh, 1, "down")
     up_bnd_nodes_idx = util.get_nodes_for_physical_group(mesh, 1, "up")

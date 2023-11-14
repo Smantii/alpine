@@ -56,7 +56,7 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
         nodes = C.CochainP0V(S, x_reshaped)
         f_coch = C.CochainP0V(S, f)
         # F = C.deformation_gradient(nodes)
-        # identity = jnp.stack([jnp.identity(2)]*num_faces)
+        # identity = jnp.stack([jnp.identity(2)]*num_faces)f
         # I = C.CochainD0T(S, identity)
         # epsilon = C.sub(C.scalar_mul(C.add(F, C.transpose(F)), 0.5), I)
         # if residual_formulation:
@@ -93,8 +93,21 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
                 or prb.last_opt_result == 4):
 
             current_err = np.linalg.norm(x_flatten-X[i, :].flatten())**2
-            # print(y[i, 0, 0])
-            # print(current_err)
+            x = x_flatten.reshape(S.node_coords.shape)
+            displacement = x - S.node_coords
+            rotation_matrix = jnp.array(
+                [[jnp.cos(jnp.pi/6), -jnp.sin(jnp.pi/6), 0], [jnp.sin(jnp.pi/6), jnp.cos(jnp.pi/6), 0], [0, 0, 1]])
+            rotation_tensor = jnp.stack([rotation_matrix]*num_nodes)
+            displacement_star = jnp.einsum(
+                "ijk, ik -> ij", rotation_tensor, displacement)
+            x_star = S.node_coords + displacement_star
+            curr_f_star = jnp.einsum("ijk, ik -> ij", rotation_tensor, curr_f)
+            x_coch = C.CochainP0V(S, x)
+            x_star_coch = C.CochainP0V(S, x_star)
+            f_coch = C.CochainP0V(S, curr_f)
+            f_star_coch = C.CochainP0V(S, curr_f_star)
+            current_err += (func(x_coch, f_coch) - func(x_star_coch, f_star_coch))**2
+            print(y[i, 0, 0], (func(x_coch, f_coch) - func(x_star_coch, f_star_coch))**2)
             # x_reshaped = x_flatten.reshape(S.node_coords.shape)
             # curr_nodes = C.CochainP0(S, x_reshaped)
             # F = C.deformation_gradient(curr_nodes)
@@ -293,10 +306,10 @@ def stgp_linear_elasticity(config_file, output_path=None):
 
     from deap import creator
     start = time.perf_counter()
-    epsilon = "SubCD0T(symD0T(gradF), I)"
+    epsilon = "SubCD0T(symD0T(grad_f), I)"
     opt_string_eps = "SubF(MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), MulF(10., InnD0T(MvD0VT(trD0T(epsilon), I), epsilon))), 0.5), InnP0V(SubCP0V(x,x_ref),f)"
     opt_string = opt_string_eps.replace("epsilon", epsilon)
-    opt_string = opt_string.replace("gradF", "def_gradP0V(x)")
+    opt_string = opt_string.replace("grad_f", "def_gradP0V(x)")
     # opt_string = ""
     opt_individ = creator.Individual.from_string(opt_string, pset)
     seed = [opt_individ]
