@@ -1,7 +1,7 @@
 # template for Linear Elasticity parameters file
 gp:
-  NINDIVIDUALS: 100
-  NGEN: 10
+  NINDIVIDUALS: 1000
+  NGEN: 100
   CXPB: 0.2
   MUTPB: 0.8
   frac_elitist: 0
@@ -39,18 +39,18 @@ gp:
     {"name": "Div", "dimension": None, "rank": None},
     {"name": "SquareF", "dimension": None, "rank": None},
     {"name": "SqrtF", "dimension": None, "rank": None},
-    {"name": "AddC", "dimension": ["0","1","2"], "rank": ["V", "T"]},
-    {"name": "SubC", "dimension": ["0","1","2"], "rank": ["V", "T"]},
-    {"name": "Square", "dimension": ["0","1","2"], "rank": ["V", "T"]},
-    {"name": "Sqrt", "dimension": ["0","1","2"], "rank": ["V", "T"]},
+    {"name": "AddC", "dimension": ["0","1","2"], "rank": ["SC","T"]},
+    {"name": "SubC", "dimension": ["0","1","2"], "rank": ["SC", "T"]},
+    #{"name": "Square", "dimension": ["0","1","2"], "rank": ["T"]},
+    #{"name": "Sqrt", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "tr", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "MF", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "Mv", "dimension": ["0","1","2"], "rank": ["ST", "VT"]},
+    {"name": "Mv", "dimension": ["0","1","2"], "rank": ["ST",]},
     {"name": "tran", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "sym", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "St", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["V","T"]},
-    {"name": "def_grad", "dimension": ["0"], "rank": ["V"]}
+    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["T"]},
+    #{"name": "def_grad", "dimension": ["0"], "rank": ["V"]}
   ]
   residual_formulation: False
 
