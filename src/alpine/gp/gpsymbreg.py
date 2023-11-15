@@ -452,9 +452,6 @@ class GPSymbRegProblem():
             print("Seeding population with individuals...", flush=True)
             self.pop[:len(seed)] = seed
 
-        # print(len(self.pop))
-        # print(self.pop[0])
-        # print([ind for ind in self.pop])
         print(" -= START OF EVOLUTION =- ", flush=True)
 
         # Evaluate the fitness of the entire population on the training set

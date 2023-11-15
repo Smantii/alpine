@@ -306,7 +306,7 @@ def stgp_linear_elasticity(config_file, output_path=None):
     start = time.perf_counter()
     # from deap import creator
     # epsilon = "SubCD0T(symD0T(grad_f), I)"
-    # opt_string_eps = "SubF(MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), MulF(10., InnD0T(MvD0VT(trD0T(epsilon), I), epsilon))), 0.5), InnP0V(SubCP0V(x,x_ref),f)"
+    # opt_string_eps = "SubF(MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), MulF(10., InnD0T(MvD0ST(trD0T(epsilon), I), epsilon))), 0.5), InnP0V(SubCP0V(x,x_ref),f)"
     # opt_string = opt_string_eps.replace("epsilon", epsilon)
     # opt_string = opt_string.replace("grad_f", "def_gradP0V(x)")
     # opt_string = ""

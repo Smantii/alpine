@@ -45,7 +45,7 @@ gp:
     {"name": "Sqrt", "dimension": ["0","1","2"], "rank": ["V", "T"]},
     {"name": "tr", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "MF", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "Mv", "dimension": ["0","1","2"], "rank": ["VT"]},
+    {"name": "Mv", "dimension": ["0","1","2"], "rank": ["ST", "VT"]},
     {"name": "tran", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "sym", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "St", "dimension": ["0","1","2"], "rank": ["T"]},

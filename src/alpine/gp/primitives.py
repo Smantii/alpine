@@ -119,6 +119,8 @@ def generate_primitive(primitive: Dict[str, Dict[str, Callable] | List[str] | st
                     if input == "float":
                         in_type_name.append(input)
                     elif len(in_rank) == 2:
+                        # FIXME: handle scalar cochains in a different way!
+                        in_rank = in_rank.replace("ST", " T")
                         # in this case the correct rank must be taken
                         in_type_name.append(input + in_category +
                                             in_dim + in_rank[i])
@@ -188,7 +190,7 @@ tr_coch = {'fun_info': {'name': 'tr', 'fun': C.trace},
            'att_input': {'category': ('P', 'D'), 'dimension': ('0', '1', '2'),
                          "rank": ("T",)},
            'map_rule': {'category': identity, 'dimension': identity,
-                        "rank": rank_downgrade}}
+                        "rank": empty_string}}
 coch_primitives.append(generate_primitive(tr_coch))
 mul_FT = {'fun_info': {'name': 'MF', 'fun': C.scalar_mul},
           'input': ["C.Cochain", "float"],
@@ -213,11 +215,11 @@ mul_coch = {'fun_info': {'name': 'CMul', 'fun': C.cochain_mul},
             'map_rule': {'category': identity, 'dimension': identity,
                          "rank": identity}}
 coch_primitives.append(generate_primitive(mul_coch))
-mul_VT = {'fun_info': {'name': 'Mv', 'fun': C.vector_tensor_mul},
+mul_VT = {'fun_info': {'name': 'Mv', 'fun': C.tensor_coch_mul},
           'input': ["C.Cochain", "C.Cochain"],
           'output': "C.Cochain",
           'att_input': {'category': ('P', 'D'), 'dimension': ('0', '1', '2'),
-                        "rank": ("VT",)},
+                        "rank": ("ST", "VT")},
           'map_rule': {'category': identity, 'dimension': identity,
                        "rank": vec_tensor_mul_rank}}
 coch_primitives.append(generate_primitive(mul_VT))
@@ -360,7 +362,7 @@ def addPrimitivesToPset(pset: gp.PrimitiveSetTyped, pset_primitives: List) -> No
         non_feasible_dimensions = list(set(('0', '1', '2')) -
                                        set(primitive['dimension']))
         non_feasible_ranks = list(
-            set(("SC", "V", "T", "vtm")) - set(primitive["rank"]))
+            set(("SC", "V", "T")) - set(primitive["rank"]))
         non_feasible_objects = non_feasible_dimensions + non_feasible_ranks
         # iterate over all the primitives, pre-computed and stored in the dictionary
         # primitives
@@ -371,7 +373,7 @@ def addPrimitivesToPset(pset: gp.PrimitiveSetTyped, pset_primitives: List) -> No
                 # dimension/rank
                 if sum([typed_primitive.count(obj)
                         for obj in non_feasible_objects]) == 0 or \
-                        typed_primitive.count("VT") == 1:
+                        typed_primitive.count("VT") == 1 or typed_primitive.count("ST") == 1:
                     op = primitives[typed_primitive].op
                     in_types = primitives[typed_primitive].in_types
                     out_type = primitives[typed_primitive].out_type
