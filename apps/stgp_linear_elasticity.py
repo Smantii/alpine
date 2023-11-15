@@ -107,7 +107,6 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
             f_coch = C.CochainP0V(S, curr_f)
             f_star_coch = C.CochainP0V(S, curr_f_star)
             current_err += (func(x_coch, f_coch) - func(x_star_coch, f_star_coch))**2
-            print(y[i, 0, 0], (func(x_coch, f_coch) - func(x_star_coch, f_star_coch))**2)
             # x_reshaped = x_flatten.reshape(S.node_coords.shape)
             # curr_nodes = C.CochainP0(S, x_reshaped)
             # F = C.deformation_gradient(curr_nodes)
@@ -304,17 +303,17 @@ def stgp_linear_elasticity(config_file, output_path=None):
 
     GPprb.register_map([len])
 
-    from deap import creator
     start = time.perf_counter()
-    epsilon = "SubCD0T(symD0T(grad_f), I)"
-    opt_string_eps = "SubF(MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), MulF(10., InnD0T(MvD0VT(trD0T(epsilon), I), epsilon))), 0.5), InnP0V(SubCP0V(x,x_ref),f)"
-    opt_string = opt_string_eps.replace("epsilon", epsilon)
-    opt_string = opt_string.replace("grad_f", "def_gradP0V(x)")
+    # from deap import creator
+    # epsilon = "SubCD0T(symD0T(grad_f), I)"
+    # opt_string_eps = "SubF(MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), MulF(10., InnD0T(MvD0VT(trD0T(epsilon), I), epsilon))), 0.5), InnP0V(SubCP0V(x,x_ref),f)"
+    # opt_string = opt_string_eps.replace("epsilon", epsilon)
+    # opt_string = opt_string.replace("grad_f", "def_gradP0V(x)")
     # opt_string = ""
-    opt_individ = creator.Individual.from_string(opt_string, pset)
-    seed = [opt_individ]
+    # opt_individ = creator.Individual.from_string(opt_string, pset)
+    # seed = [opt_individ]
 
-    GPprb.run(print_log=True, seed=seed,
+    GPprb.run(print_log=True, seed=None,
               save_best_individual=True, save_train_fit_history=True,
               save_best_test_sols=True, X_test_param_name="X",
               output_path=output_path)
