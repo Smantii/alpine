@@ -45,10 +45,10 @@ gp:
     #{"name": "Sqrt", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "tr", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "MF", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "Mv", "dimension": ["0","1","2"], "rank": ["ST",]},
+    {"name": "Mv", "dimension": ["0","1","2"], "rank": ["ST"]},
     {"name": "tran", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "sym", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "St", "dimension": ["0","1","2"], "rank": ["T"]},
+    {"name": "St2", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "Inn", "dimension": ["0","1","2"], "rank": ["T"]},
     #{"name": "def_grad", "dimension": ["0"], "rank": ["V"]}
   ]
