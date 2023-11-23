@@ -138,8 +138,8 @@ if __name__ == '__main__':
                    data_generator_kwargs={'S': S,
                                           'lame_moduli': [[(10, 1)], [(10, 1)]],
                                           'num_data_per_each_mod_couple': [[10], [10]],
-                                          'bench_names': ["pure_tension",
-                                                          "pure_shear"], 'prb_kwargs': [[], []]},
+                                          'bench_names': ["pure_shear",
+                                                          "non_homogeneous_example"], 'prb_kwargs': [[], [bnodes]]},
                    perc_val=0.3,
                    perc_test=0.2,
                    format="npy")
