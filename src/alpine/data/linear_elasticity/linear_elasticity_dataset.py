@@ -8,6 +8,7 @@ import numpy.typing as npt
 import alpine.data.util as u
 from dctkit.physics.elasticity import LinearElasticity
 from dctkit.math.opt import optctrl
+import dctkit.dec.cochain as C
 
 
 data_path = os.path.dirname(os.path.realpath(__file__))
@@ -82,22 +83,23 @@ def get_data(S: simplex.SimplicialComplex, lame_moduli: List[List],
                     boundary_values = {":": (bnodes, bvalues)}
 
                     f = np.zeros(S.node_coords.shape, dtype=dt.float_dtype)
-                    f[:, 0] = 4*mu_*b - 2*lambda_*a + 2*lambda_*b
-                    f[:, 1] = -4*mu_*a - 2*lambda_*a + 2*lambda_*b
+                    true_node_coch = C.CochainP0(S, anal_node_coords)
 
                     ela = LinearElasticity(S=S, mu_=mu_, lambda_=lambda_)
-                    obj = ela.obj_linear_elasticity_energy
-                    obj_args = {'f': f, 'gamma': gamma,
-                                'boundary_values': boundary_values}
+                    f_coch = C.star(ela.get_dual_balance(true_node_coch, dict()))
+                    f[:, :-1] = -f_coch.coeffs
+                    #obj = ela.obj_linear_elasticity_energy
+                    #obj_args = {'f': f, 'gamma': gamma,
+                    #            'boundary_values': boundary_values}
 
-                    prb = optctrl.OptimizationProblem(
-                        dim=len(x0), state_dim=len(x0), objfun=obj)
+                    #prb = optctrl.OptimizationProblem(
+                    #    dim=len(x0), state_dim=len(x0), objfun=obj)
 
-                    prb.set_obj_args(obj_args)
-                    sol = prb.solve(x0=x0, ftol_abs=1e-12,
-                                    ftol_rel=1e-12, maxeval=20000)
-                    curr_node_coords = sol.reshape(S.node_coords.shape)
-                    true_curr_node_coords[j, :, :] = curr_node_coords
+                    #prb.set_obj_args(obj_args)
+                    #sol = prb.solve(x0=x0, ftol_abs=1e-12,
+                    #                ftol_rel=1e-12, maxeval=20000)
+                    #curr_node_coords = sol.reshape(S.node_coords.shape)
+                    true_curr_node_coords[j, :, :] = anal_node_coords
                     f_data[j, :, :] = f
 
             X[prec_num_data:prec_num_data+num_data, :, :] = true_curr_node_coords
