@@ -1,6 +1,6 @@
 # template for Linear Elasticity parameters file
 gp:
-  NINDIVIDUALS: 1000
+  NINDIVIDUALS: 2000
   NGEN: 100
   CXPB: 0.2
   MUTPB: 0.8
@@ -8,20 +8,20 @@ gp:
   min_: 2
   max_: 5
   overlapping_generation: True
-  early_stopping: { "enabled": True, "max_overfit": 10 }
+  early_stopping: { "enabled": False, "max_overfit": 10 }
   parsimony_pressure:
     { "enabled": False, "fitness_first": True, "parsimony_size": 1.5 }
   penalty: { "method": "length", "reg_param": 0.}
   select:
     tournsize: 2
-    stochastic_tournament: { "enabled": False, "prob": [0.7, 0.3] }
+    stochastic_tournament: { "enabled": True, "prob": [0.7, 0.3] }
   mutate:
     # fun: gp.mutUniform
     fun: gp.mixedMutate
     # fun: gp.mutNodeReplacement
     # fun: gp.mutInsert
     # fun: gp.mutShrink
-    kargs: "{'expr': toolbox.expr_mut, 'pset': self.pset, 'prob': [0.8, 0.2, 0.]}" # string is important
+    kargs: "{'expr': toolbox.expr_mut, 'pset': self.pset, 'prob': [0.7, 0.2, 0.1]}" # string is important
     # kargs: "{'pset': pset}"
     # kargs: "{}"
     expr_mut: gp.genHalfAndHalf
@@ -39,8 +39,8 @@ gp:
     {"name": "Div", "dimension": None, "rank": None},
     {"name": "SquareF", "dimension": None, "rank": None},
     {"name": "SqrtF", "dimension": None, "rank": None},
-    {"name": "AddC", "dimension": ["0","1","2"], "rank": ["SC","T"]},
-    {"name": "SubC", "dimension": ["0","1","2"], "rank": ["SC", "T"]},
+    {"name": "AddC", "dimension": ["0","1","2"], "rank": ["SC", "V", "T"]},
+    {"name": "SubC", "dimension": ["0","1","2"], "rank": ["SC", "V", "T"]},
     #{"name": "Square", "dimension": ["0","1","2"], "rank": ["T"]},
     #{"name": "Sqrt", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "tr", "dimension": ["0","1","2"], "rank": ["T"]},
@@ -49,7 +49,7 @@ gp:
     {"name": "tran", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "sym", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "St2", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["T"]},
+    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["V","T"]},
     #{"name": "def_grad", "dimension": ["0"], "rank": ["V"]}
   ]
   residual_formulation: False
