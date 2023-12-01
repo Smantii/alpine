@@ -54,6 +54,7 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
                 penalty += jnp.sum((x_reshaped[idx, int(key)] - values)**2)
         penalty *= gamma
         nodes = C.CochainP0V(S, x_reshaped)
+        ref_nodes = C.CochainP0V(S, S.node_coords)
         f_coch = C.CochainP0V(S, f)
         F = C.deformation_gradient(nodes)
         # identity = jnp.stack([jnp.identity(2)]*num_faces)f
@@ -62,9 +63,7 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
         # if residual_formulation:
         #    total_energy = C.inner_product(func(c, fk), func(c, fk)) + penalty
         # else:
-        #total_energy = func(F) - C.inner_product(C.sub(nodes,
-        #                                               ref_nodes), f_coch) + penalty
-        total_energy = func(nodes,f_coch, F) + penalty
+        total_energy = func(F) - C.inner_product(C.sub(nodes, ref_nodes), f_coch) + penalty
         return total_energy
 
     prb = oc.OptimizationProblem(dim=num_nodes*dim_embedded_space,
@@ -111,13 +110,12 @@ def eval_MSE_sol(func: Callable, indlen: int, X: npt.NDArray, y: npt.NDArray,
             # current_err += (func(x_coch, f_coch) - func(x_star_coch, f_star_coch))**2
             x_reshaped = x_flatten.reshape(S.node_coords.shape)
             curr_nodes = C.CochainP0V(S, x_reshaped)
-            f_coch = C.CochainP0V(S, curr_f)
 
             F = C.deformation_gradient(curr_nodes)
             W = jnp.stack(
                 [jnp.array([[0, jnp.e], [-jnp.e, 0]])]*num_faces)
             F_plus_W = C.CochainD0(S, F.coeffs + W)
-            current_err += (func(curr_nodes, f_coch,F) - func(curr_nodes, f_coch,F_plus_W))**2
+            current_err += (func(F) - func(F_plus_W))**2
         else:
             current_err = math.nan
 
@@ -266,7 +264,7 @@ def stgp_linear_elasticity(config_file, output_path=None):
         print("Using residual formulation.")
         raise Exception("Only non-residual formulation available for this problem.")
     else:
-        pset = gp.PrimitiveSetTyped("MAIN", [C.CochainP0V, C.CochainP0V, C.CochainD0T], float)
+        pset = gp.PrimitiveSetTyped("MAIN", [C.CochainD0T], float)
 
     # add constants
     pset.addTerminal(0.5, float, name="1/2")
@@ -275,17 +273,12 @@ def stgp_linear_elasticity(config_file, output_path=None):
     pset.addTerminal(10., float, name="10.")
     pset.addTerminal(0.1, float, name="0.1")
 
-    # add ref node coords as terminal
-    pset.addTerminal(ref_nodes, C.CochainP0V, name="x_ref")
-
     identity = jnp.stack([jnp.identity(2)]*num_faces)
     identity_coch = C.CochainD0T(S, identity)
     pset.addTerminal(identity_coch, C.CochainD0T, name="I")
 
     # rename arguments
-    pset.renameArguments(ARG0="x")
-    pset.renameArguments(ARG1="f")
-    pset.renameArguments(ARG2="F")
+    pset.renameArguments(ARG0="F")
 
 
     # create symbolic regression problem instance
@@ -313,14 +306,14 @@ def stgp_linear_elasticity(config_file, output_path=None):
     GPprb.register_map([len])
 
     start = time.perf_counter()
-    #from deap import creator
-    #epsilon = "SubCD0T(symD0T(F), I)"
-    #opt_string_eps = "SubF(MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), 
-    # MulF(10., InnD0T(MvD0ST(trD0T(epsilon), I), epsilon))), 0.5), InnP0V(SubCP0V(x, x_ref), f))"
-    #opt_string = opt_string_eps.replace("epsilon", epsilon)
+    # from deap import creator
+    # epsilon = "SubCD0T(symD0T(F), I)"
+    # opt_string_eps = "MulF(AddF(MulF(2., InnD0T(epsilon, epsilon)), 
+    # MulF(10., InnD0T(MvD0ST(trD0T(epsilon), I), epsilon))), 0.5)"
+    # opt_string = opt_string_eps.replace("epsilon", epsilon)
     # opt_string = ""
     #opt_individ = creator.Individual.from_string(opt_string, pset)
-    #seed = [opt_individ]
+    # seed = [opt_individ]
 
     GPprb.run(print_log=True, seed=None,
               save_best_individual=True, save_train_fit_history=True,

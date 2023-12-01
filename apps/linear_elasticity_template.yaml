@@ -39,8 +39,8 @@ gp:
     {"name": "Div", "dimension": None, "rank": None},
     {"name": "SquareF", "dimension": None, "rank": None},
     {"name": "SqrtF", "dimension": None, "rank": None},
-    {"name": "AddC", "dimension": ["0","1","2"], "rank": ["SC", "V", "T"]},
-    {"name": "SubC", "dimension": ["0","1","2"], "rank": ["SC", "V", "T"]},
+    {"name": "AddC", "dimension": ["0","1","2"], "rank": ["SC", "T"]},
+    {"name": "SubC", "dimension": ["0","1","2"], "rank": ["SC", "T"]},
     #{"name": "Square", "dimension": ["0","1","2"], "rank": ["T"]},
     #{"name": "Sqrt", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "tr", "dimension": ["0","1","2"], "rank": ["T"]},
@@ -49,7 +49,7 @@ gp:
     {"name": "tran", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "sym", "dimension": ["0","1","2"], "rank": ["T"]},
     {"name": "St2", "dimension": ["0","1","2"], "rank": ["T"]},
-    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["V","T"]},
+    {"name": "Inn", "dimension": ["0","1","2"], "rank": ["T"]},
     #{"name": "def_grad", "dimension": ["0"], "rank": ["V"]}
   ]
   residual_formulation: False
