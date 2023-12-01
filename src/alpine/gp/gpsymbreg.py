@@ -83,10 +83,10 @@ class GPSymbRegProblem():
         self.stats_size = tools.Statistics(len)
         self.mstats = tools.MultiStatistics(fitness=self.stats_fit,
                                             size=self.stats_size)
-        self.mstats.register("avg", lambda ind: np.around(np.mean(ind), 11))
-        self.mstats.register("std", lambda ind: np.around(np.std(ind), 11))
-        self.mstats.register("min", lambda ind: np.around(np.min(ind), 11))
-        self.mstats.register("max", lambda ind: np.around(np.max(ind), 11))
+        self.mstats.register("avg", lambda ind: np.around(np.mean(ind), 4))
+        self.mstats.register("std", lambda ind: np.around(np.std(ind), 4))
+        self.mstats.register("min", lambda ind: np.around(np.min(ind), 4))
+        self.mstats.register("max", lambda ind: np.around(np.max(ind), 4))
 
         self.__init_logbook()
 
