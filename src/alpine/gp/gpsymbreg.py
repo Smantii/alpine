@@ -482,7 +482,7 @@ class GPSymbRegProblem():
         if preprocess_fun is not None:
             preprocess_fun(self.pop)
 
-        if not hasattr(self.pop[0].fitness, "values"):
+        if len(self.pop[0].fitness.values) == 0:
             fitnesses = self.toolbox.map(self.toolbox.evaluate_train, self.pop)
 
             for ind, fit in zip(self.pop, fitnesses):
@@ -530,11 +530,11 @@ class GPSymbRegProblem():
             if preprocess_fun is not None:
                 preprocess_fun(invalid_ind)
 
-            if not hasattr(invalid_ind[0].fitness, "values"):
-                fitnesses = self.toolbox.map(self.toolbox.evaluate_train, self.pop)
+            # if not hasattr(invalid_ind[0].fitness, "values"):
+            fitnesses = self.toolbox.map(self.toolbox.evaluate_train, self.pop)
 
-                for ind, fit in zip(invalid_ind, fitnesses):
-                    ind.fitness.values = fit
+            for ind, fit in zip(invalid_ind, fitnesses):
+                ind.fitness.values = fit
 
             if not self.overlapping_generation:
                 # The population is entirely replaced by the offspring
@@ -542,6 +542,9 @@ class GPSymbRegProblem():
             else:
                 # parents and offspring compete for survival (truncation selection)
                 self.pop = tools.selBest(self.pop + offspring, self.NINDIVIDUALS)
+
+            # print([str(i) for i in offspring])
+            # print([str(i) for i in self.pop])
 
             # select the best individual in the current population
             best = tools.selBest(self.pop, k=1)[0]

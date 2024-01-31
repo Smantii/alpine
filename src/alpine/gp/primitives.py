@@ -175,6 +175,13 @@ mul_FT = {'fun_info': {'name': 'MF', 'fun': C.scalar_mul},
                         "rank": ("SC", "V", "T")},
           'map_rule': {'category': lambda x: x, 'dimension': lambda x: x,
                        "rank": lambda x: x}}
+subFC = {'fun_info': {'name': 'SubFC', 'fun': C.constant_sub},
+         'input': ["float", "C.Cochain"],
+         'output': "C.Cochain",
+         'att_input': {'category': ('P', 'D'), 'dimension': ('0', '1', '2'),
+                       "rank": ("SC", "V", "T")},
+         'map_rule': {'category': lambda x: x, 'dimension': lambda x: x,
+                      "rank": lambda x: x}}
 inv_mul_FT = {'fun_info': {'name': 'InvM', 'fun': inv_scalar_mul},
               'input': ["C.Cochain", "float"],
               'output': "C.Cochain",
@@ -313,7 +320,7 @@ flat_par = {'fun_info': {'name': 'flat_par',
             'map_rule': {'category': lambda x: x, 'dimension': partial(operator.add, 1),
                          "rank": lambda x: x}}
 coch_prim_list = [add_coch, sub_coch, coboundary, codifferential, tr_coch, mul_FT,
-                  inv_mul_FT, mul_coch, mul_VT, tran_coch, sym_coch, star_1, star_2,
+                  subFC, inv_mul_FT, mul_coch, mul_VT, tran_coch, sym_coch, star_1, star_2,
                   inner_product, sin_coch, arcsin_coch, cos_coch, arccos_coch, exp_coch,
                   log_coch, sqrt_coch, square_coch, def_gradient, flat_up, flat_par]
 coch_primitives = list(map(generate_primitive, coch_prim_list))
