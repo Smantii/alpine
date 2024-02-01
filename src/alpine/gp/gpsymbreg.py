@@ -482,6 +482,8 @@ class GPSymbRegProblem():
         if preprocess_fun is not None:
             preprocess_fun(self.pop)
 
+        # NOTE: this if is needed in the case fitnesses are evaluated inside
+        # preprocess_fun
         if len(self.pop[0].fitness.values) == 0:
             fitnesses = self.toolbox.map(self.toolbox.evaluate_train, self.pop)
 
@@ -530,11 +532,13 @@ class GPSymbRegProblem():
             if preprocess_fun is not None:
                 preprocess_fun(invalid_ind)
 
-            # if not hasattr(invalid_ind[0].fitness, "values"):
-            fitnesses = self.toolbox.map(self.toolbox.evaluate_train, self.pop)
+            # NOTE: this if is needed in the case fitnesses are evaluated inside
+            # preprocess_fun
+            if len(invalid_ind[0].fitness.values) == 0:
+                fitnesses = self.toolbox.map(self.toolbox.evaluate_train, invalid_ind)
 
-            for ind, fit in zip(invalid_ind, fitnesses):
-                ind.fitness.values = fit
+                for ind, fit in zip(invalid_ind, fitnesses):
+                    ind.fitness.values = fit
 
             if not self.overlapping_generation:
                 # The population is entirely replaced by the offspring
