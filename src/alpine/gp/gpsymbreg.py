@@ -305,7 +305,8 @@ class GPSymbolicRegressor():
         best = tools.selBest(pop, k=1)
         # FIXME: ugly way of handling lists/tuples; assume eval_val_MSE returns a
         # single-valued tuple as eval_val_fit
-        valid_fit = self.toolbox.map(self.toolbox.evaluate_val_fit, best)[0][0]
+        valid_fit = self.toolbox.map(self.toolbox.evaluate_val_fit, best)[
+            0]['fitness'][0]
         valid_err = self.toolbox.map(self.toolbox.evaluate_val_MSE, best)[0]
 
         return valid_fit, valid_err
