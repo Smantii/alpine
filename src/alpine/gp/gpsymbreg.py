@@ -305,9 +305,11 @@ class GPSymbolicRegressor():
         best = tools.selBest(pop, k=1)
         # FIXME: ugly way of handling lists/tuples; assume eval_val_MSE returns a
         # single-valued tuple as eval_val_fit
-        valid_fit = self.toolbox.map(self.toolbox.evaluate_val_fit, best)[
-            0]['fitness'][0]
+
+        # valid_fit = self.toolbox.map(self.toolbox.evaluate_val_fit, best)[
+        #    0]['fitness'][0]
         valid_err = self.toolbox.map(self.toolbox.evaluate_val_MSE, best)[0]
+        valid_fit = valid_err
 
         return valid_fit, valid_err
 
@@ -632,7 +634,8 @@ class GPSymbolicRegressor():
 
             print("Best individuals of this generation:", flush=True)
             for i in range(self.num_best_inds_str):
-                print(str(best_inds[i]))
+                print(str(best_inds[i]), flush=True)
+                print(f"Constants: {best_inds[i].consts}")
 
             # Update history of best fitness and best validation error
             self.train_fit_history = self.logbook.chapters["fitness"].select("min")
@@ -682,17 +685,37 @@ class GPSymbolicRegressor():
 
     def plot_best_individual_tree(self):
         """Plots the tree of the best individual at the end of the evolution."""
+        fontsize = 20
+        plt.rc('font', size=fontsize)
         nodes, edges, labels = gp.graph(self.best)
+        a_vec = np.array([0.99999923,  0.99999923,  1.00509072,  0.99995828, - 0.81620142,  1.02344056,
+                          1.47139561,  1.47139561,  1.0006127,   3.30097119,  0.02612754,  1.,
+                          1.,          1.,          3.14841604,  3.14841604, - 1.14841604, - 2.38982339,
+                          5.,          1.4983762,   1.01281753,  1.01281753,  2.06776603,  1.54065312,
+                          1.54065312,  1.53863585,  0.4482149, - 0.93396765,  0.5016238, - 4.22223377,
+                          - 4.22223377, - 0.71081419,  1.04338311,  1.04338311, - 5.])
+        a_round = np.around(a_vec, decimals=2)
+        i = 0
+        for key, _ in labels.items():
+            if labels[key] == "a":
+                labels[key] = str(a_round[i])
+                i += 1
+        print(labels)
         graph = nx.Graph()
         graph.add_nodes_from(nodes)
         graph.add_edges_from(edges)
         pos = nx.nx_agraph.graphviz_layout(graph, prog="dot")
-        plt.figure(figsize=(7, 7))
-        nx.draw_networkx_nodes(graph, pos, node_size=900, node_color="w")
-        nx.draw_networkx_edges(graph, pos)
-        nx.draw_networkx_labels(graph, pos, labels)
+        plt.figure(figsize=(80, 40))
+        nx.draw_networkx_nodes(graph, pos, node_size=600, node_color="w")
+        nx.draw_networkx_edges(graph, pos, arrowsize=10)
+        nx.draw_networkx_labels(graph, pos, labels, font_size=20)
         plt.axis("off")
-        plt.show()
+        fig = plt.gcf()
+        fig.set_size_inches(80, 40)
+        axis = plt.gca()
+        axis.set_xlim([1.2*x for x in axis.get_xlim()])
+        axis.set_ylim([1.2*y for y in axis.get_ylim()])
+        plt.savefig("graph.png", dpi=500)
 
     def save_best_individual(self, output_path: str):
         """Saves the string of the best individual of the population in a .txt file.
