@@ -654,7 +654,7 @@ class GPSymbolicRegressor():
                 self.toolbox.plot_best_func(best_inds[0])
 
             self.best = best_inds[0]
-            if self.best.fitness.values[0] <= 1e-15:
+            if np.abs(self.best.fitness.values[0]) <= 1e-15:
                 print("EARLY STOPPING.")
                 break
 
